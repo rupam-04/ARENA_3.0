@@ -1,11 +1,16 @@
 import re
+import sys
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 import torch as t
 from plotly.subplots import make_subplots
+
+if "google.colab" in sys.modules:
+    pio.renderers.default = "colab"
 
 CONFIG = {"displaylogo": False}
 

@@ -1,5 +1,17 @@
+import sys
+
 import plotly.graph_objects as go
+import plotly.io as pio
 import torch as t
+
+if "google.colab" in sys.modules:
+    pio.renderers.default = "colab"
+    try:
+        from google.colab import output
+
+        output.enable_custom_widget_manager()
+    except Exception:
+        pass
 
 
 def render_lines_with_plotly(lines: t.Tensor, bold_lines: t.Tensor = t.Tensor(), filename: str | None = None):
