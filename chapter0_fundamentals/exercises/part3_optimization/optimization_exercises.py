@@ -153,17 +153,21 @@ class DistResNetTrainer:
         self.optimizer = t.optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=self.args.weight_decay)
         self.trainset, self.testset = get_cifar()
 
-        self.train_sampler = t.utils.data.DistributedSampler(
-            self.trainset,
-            num_replicas=self.args.world_size,
-            rank=self.rank
-        )
+        self.train_sampler = None
+        if self.args.world_size > 1:
+            self.train_sampler = t.utils.data.DistributedSampler(
+                self.trainset,
+                num_replicas=self.args.world_size,
+                rank=self.rank
+            )
         self.train_loader = DataLoader(self.trainset, batch_size=self.args.batch_size, sampler=self.train_sampler, num_workers=2, pin_memory=True)
-        self.test_sampler = t.utils.data.DistributedSampler(
-            self.testset,
-            num_replicas=self.args.world_size,
-            rank=self.rank
-        )
+        self.test_sampler = None
+        if self.args.world_size > 1:
+            self.test_sampler = t.utils.data.DistributedSampler(
+                self.testset,
+                num_replicas=self.args.world_size,
+                rank=self.rank
+            )
         self.test_loader = DataLoader(self.testset, batch_size=self.args.batch_size, sampler=self.test_sampler, num_workers=2, pin_memory=True)
         self.examples_seen = 0
         #raise NotImplementedError()
@@ -191,7 +195,7 @@ class DistResNetTrainer:
             imgs, labels = imgs.to(self.device), labels.to(self.device)
             logits = self.model(imgs)
             total_correct += (logits.argmax(dim=1) == labels).sum().item()
-            total_samples = len(imgs)
+            total_samples += len(imgs)
 
         tensor = t.tensor([total_correct, total_samples], device=self.device)
         all_reduce(tensor, self.rank, self.args.world_size)
